@@ -43,12 +43,16 @@
       getDatabase, ref, set, get
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-    };
+  const firebaseConfig = {
+  apiKey: "AIzaSyA5dPl1zsTvSvzRl3CFW39Fy1rNhDbjZ2Q",
+  authDomain: "myvipbarcodescanner.firebaseapp.com",
+  databaseURL: "https://myvipbarcodescanner-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "myvipbarcodescanner",
+  storageBucket: "myvipbarcodescanner.firebasestorage.app",
+  messagingSenderId: "91560569780",
+  appId: "1:91560569780:web:649b16735ec0daab5620e1",
+  measurementId: "G-D6VB5HFSPR"
+};
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
