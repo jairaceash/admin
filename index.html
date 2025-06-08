@@ -34,16 +34,24 @@
     <pre id="result"></pre>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import {
-      getDatabase, ref, set, get
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    child,
+    onValue
+  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyA5dPl1zsTvSvzRl3CFW39Fy1rNhDbjZ2Q",
   authDomain: "myvipbarcodescanner.firebaseapp.com",
   databaseURL: "https://myvipbarcodescanner-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -54,55 +62,68 @@
   measurementId: "G-D6VB5HFSPR"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
 
-    const loginSection = document.getElementById("login-section");
-    const adminPanel = document.getElementById("admin-panel");
-    const loginError = document.getElementById("login-error");
+  const loginSection = document.getElementById("login-section");
+  const adminSection = document.getElementById("admin-section");
+  const userData = document.getElementById("user-data");
 
-    window.login = function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+  const loginBtn = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          loginError.textContent = "";
-        })
-        .catch((error) => {
-          loginError.textContent = error.message;
+  loginBtn.onclick = () => {
+    signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+      .then(() => {
+        emailInput.value = "";
+        passwordInput.value = "";
+      })
+      .catch((error) => alert("Login Failed: " + error.message));
+  };
+
+  logoutBtn.onclick = () => {
+    signOut(auth);
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginSection.style.display = "none";
+      adminSection.style.display = "block";
+      fetchAllUsers(); // 🔥 fetch all user data
+    } else {
+      loginSection.style.display = "block";
+      adminSection.style.display = "none";
+    }
+  });
+
+  document.getElementById("update-btn").onclick = () => {
+    const userId = document.getElementById("user-id").value;
+    const status = document.getElementById("status").value;
+    set(ref(db, "users/" + userId + "/status"), status)
+      .then(() => alert("Status updated!"))
+      .catch((error) => alert("Error updating: " + error.message));
+  };
+
+  function fetchAllUsers() {
+    const usersRef = ref(db, "users/");
+    onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        userData.innerHTML = "";
+        Object.keys(data).forEach((userId) => {
+          const userInfo = JSON.stringify(data[userId], null, 2);
+          userData.innerHTML += `<h4>${userId}</h4><pre>${userInfo}</pre><hr>`;
         });
-    }
-
-    window.logout = function () {
-      signOut(auth);
-    }
-
-    window.updateStatus = async function () {
-      const userId = document.getElementById("userId").value;
-      const status = document.getElementById("status").value;
-      if (!userId || !status) return alert("Fill all fields");
-
-      await set(ref(db, 'users/' + userId + '/status'), status);
-      alert("Status updated!");
-
-      const snapshot = await get(ref(db, 'users/' + userId));
-      if (snapshot.exists()) {
-        document.getElementById("result").textContent = JSON.stringify(snapshot.val(), null, 2);
-      }
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginSection.classList.add("hidden");
-        adminPanel.classList.remove("hidden");
       } else {
-        loginSection.classList.remove("hidden");
-        adminPanel.classList.add("hidden");
+        userData.innerHTML = "No users found.";
       }
     });
-  </script>
+  }
+</script>
+
 
 </body>
 </html>
