@@ -204,6 +204,14 @@
     }
   });
 
+  // Helper: strip double quotes from string if present
+  function stripQuotes(str) {
+    if (typeof str === "string") {
+      return str.replace(/^"(.*)"$/, '$1');
+    }
+    return str;
+  }
+
   // Render user with email clickable to toggle details
   function renderUserCard(userId, userData) {
     const card = document.createElement("div");
@@ -233,7 +241,7 @@
       const input = document.createElement("input");
       input.type = "text";
       input.id = `${userId}-${key}`;
-      input.value = userData[key];
+      input.value = stripQuotes(userData[key]);
       row.appendChild(input);
 
       details.appendChild(row);
