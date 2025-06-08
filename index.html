@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Firebase Admin Panel with Login</title>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial; max-width: 500px; margin: auto; padding: 20px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>Admin Login</h1>
+  <div id="login-section">
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+    <button onclick="login()">Login</button>
+    <p id="login-error" style="color:red;"></p>
+  </div>
+
+  <div id="admin-panel" class="hidden">
+    <h2>Welcome, Admin</h2>
+    <button onclick="logout()">Logout</button><br><br>
+
+    <label>User ID:</label><br>
+    <input type="text" id="userId" placeholder="e.g. user123"><br><br>
+
+    <label>Status:</label><br>
+    <input type="text" id="status" placeholder="e.g. active"><br><br>
+
+    <button onclick="updateStatus()">Update Status</button>
+
+    <h3>Fetched User Data:</h3>
+    <pre id="result"></pre>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import {
+      getDatabase, ref, set, get
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const loginSection = document.getElementById("login-section");
+    const adminPanel = document.getElementById("admin-panel");
+    const loginError = document.getElementById("login-error");
+
+    window.login = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          loginError.textContent = "";
+        })
+        .catch((error) => {
+          loginError.textContent = error.message;
+        });
+    }
+
+    window.logout = function () {
+      signOut(auth);
+    }
+
+    window.updateStatus = async function () {
+      const userId = document.getElementById("userId").value;
+      const status = document.getElementById("status").value;
+      if (!userId || !status) return alert("Fill all fields");
+
+      await set(ref(db, 'users/' + userId + '/status'), status);
+      alert("Status updated!");
+
+      const snapshot = await get(ref(db, 'users/' + userId));
+      if (snapshot.exists()) {
+        document.getElementById("result").textContent = JSON.stringify(snapshot.val(), null, 2);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginSection.classList.add("hidden");
+        adminPanel.classList.remove("hidden");
+      } else {
+        loginSection.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+      }
+    });
+  </script>
+
+</body>
+</html>
