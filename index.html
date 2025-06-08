@@ -34,7 +34,7 @@
     <pre id="result"></pre>
   </div>
 
- <script type="module">
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
   import {
     getAuth,
@@ -51,7 +51,7 @@
     onValue
   } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-const firebaseConfig = {
+  const firebaseConfig = {
   apiKey: "AIzaSyA5dPl1zsTvSvzRl3CFW39Fy1rNhDbjZ2Q",
   authDomain: "myvipbarcodescanner.firebaseapp.com",
   databaseURL: "https://myvipbarcodescanner-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -61,7 +61,6 @@ const firebaseConfig = {
   appId: "1:91560569780:web:649b16735ec0daab5620e1",
   measurementId: "G-D6VB5HFSPR"
 };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
@@ -123,6 +122,7 @@ const firebaseConfig = {
     });
   }
 </script>
+
 
 
 </body>
