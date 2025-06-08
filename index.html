@@ -63,10 +63,16 @@
       padding: 15px;
       margin-bottom: 20px;
       box-shadow: inset 0 0 6px #bdc3c7;
+      cursor: pointer;
     }
     .user-card h4 {
-      margin: 0 0 10px;
+      margin: 0;
       color: #34495e;
+      user-select: none;
+    }
+    .user-details {
+      margin-top: 12px;
+      display: none;
     }
     .field-row {
       display: flex;
@@ -91,6 +97,7 @@
       float: right;
       font-size: 14px;
       padding: 8px 14px;
+      cursor: pointer;
     }
     .apply-btn:hover {
       background-color: #1e8449;
@@ -139,7 +146,6 @@
   import {
     getDatabase,
     ref,
-    set,
     onValue,
     update
   } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
@@ -198,17 +204,24 @@
     }
   });
 
-  // Render each user as editable fields
+  // Render user with email clickable to toggle details
   function renderUserCard(userId, userData) {
     const card = document.createElement("div");
     card.className = "user-card clearfix";
 
+    // Email clickable header
     const title = document.createElement("h4");
-    title.textContent = `User ID: ${userId}`;
+    title.textContent = userData.email || userId;
+    title.style.userSelect = "none";
     card.appendChild(title);
 
-    // For each property, create editable input
+    // Details container hidden by default
+    const details = document.createElement("div");
+    details.className = "user-details";
+
+    // For each property except email (already shown), create editable input
     for (const key in userData) {
+      if (key === "email") continue;
       const row = document.createElement("div");
       row.className = "field-row";
 
@@ -223,21 +236,23 @@
       input.value = userData[key];
       row.appendChild(input);
 
-      card.appendChild(row);
+      details.appendChild(row);
     }
 
-    // Add apply button
+    // Apply Changes button inside details
     const applyBtn = document.createElement("button");
     applyBtn.className = "apply-btn";
     applyBtn.textContent = "Apply Changes";
-    applyBtn.onclick = () => {
-      // Collect all updated values
+    applyBtn.onclick = (e) => {
+      e.stopPropagation(); // Prevent toggling collapse when clicking button
+
       const updatedData = {};
       for (const key in userData) {
+        if (key === "email") continue;
         const inputEl = document.getElementById(`${userId}-${key}`);
         updatedData[key] = inputEl.value;
       }
-      // Update Firebase
+
       update(ref(db, `users/${userId}`), updatedData)
         .then(() => {
           alert(`User ${userId} updated successfully.`);
@@ -246,7 +261,18 @@
           alert(`Error updating user ${userId}: ${error.message}`);
         });
     };
-    card.appendChild(applyBtn);
+    details.appendChild(applyBtn);
+
+    card.appendChild(details);
+
+    // Toggle details on email click
+    title.onclick = () => {
+      if (details.style.display === "none" || details.style.display === "") {
+        details.style.display = "block";
+      } else {
+        details.style.display = "none";
+      }
+    };
 
     return card;
   }
