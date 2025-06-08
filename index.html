@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Firebase Admin Panel with Login</title>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <style>
     body { font-family: Arial; max-width: 500px; margin: auto; padding: 20px; }
     .hidden { display: none; }
@@ -12,26 +12,26 @@
 
   <h1>Admin Login</h1>
   <div id="login-section">
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button onclick="login()">Login</button>
+    <input type="email" id="email" placeholder="Email" /><br /><br />
+    <input type="password" id="password" placeholder="Password" /><br /><br />
+    <button id="login-btn">Login</button>
     <p id="login-error" style="color:red;"></p>
   </div>
 
-  <div id="admin-panel" class="hidden">
+  <div id="admin-section" class="hidden">
     <h2>Welcome, Admin</h2>
-    <button onclick="logout()">Logout</button><br><br>
+    <button id="logout-btn">Logout</button><br /><br />
 
-    <label>User ID:</label><br>
-    <input type="text" id="userId" placeholder="e.g. user123"><br><br>
+    <label>User ID:</label><br />
+    <input type="text" id="user-id" placeholder="e.g. user123" /><br /><br />
 
-    <label>Status:</label><br>
-    <input type="text" id="status" placeholder="e.g. active"><br><br>
+    <label>Status:</label><br />
+    <input type="text" id="status" placeholder="e.g. active" /><br /><br />
 
-    <button onclick="updateStatus()">Update Status</button>
+    <button id="update-btn">Update Status</button>
 
     <h3>Fetched User Data:</h3>
-    <pre id="result"></pre>
+    <pre id="user-data"></pre>
   </div>
 
 <script type="module">
@@ -46,66 +46,78 @@
     getDatabase,
     ref,
     set,
-    get,
-    child,
     onValue
   } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyA5dPl1zsTvSvzRl3CFW39Fy1rNhDbjZ2Q",
-  authDomain: "myvipbarcodescanner.firebaseapp.com",
-  databaseURL: "https://myvipbarcodescanner-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "myvipbarcodescanner",
-  storageBucket: "myvipbarcodescanner.firebasestorage.app",
-  messagingSenderId: "91560569780",
-  appId: "1:91560569780:web:649b16735ec0daab5620e1",
-  measurementId: "G-D6VB5HFSPR"
-};
+    apiKey: "AIzaSyA5dPl1zsTvSvzRl3CFW39Fy1rNhDbjZ2Q",
+    authDomain: "myvipbarcodescanner.firebaseapp.com",
+    databaseURL: "https://myvipbarcodescanner-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "myvipbarcodescanner",
+    storageBucket: "myvipbarcodescanner.firebasestorage.app",
+    messagingSenderId: "91560569780",
+    appId: "1:91560569780:web:649b16735ec0daab5620e1",
+    measurementId: "G-D6VB5HFSPR"
+  };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  // Elements
   const loginSection = document.getElementById("login-section");
   const adminSection = document.getElementById("admin-section");
   const userData = document.getElementById("user-data");
-
-  const loginBtn = document.getElementById("login-btn");
-  const logoutBtn = document.getElementById("logout-btn");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
+  const loginError = document.getElementById("login-error");
 
-  loginBtn.onclick = () => {
+  // Login button handler
+  document.getElementById("login-btn").onclick = () => {
+    loginError.textContent = "";
     signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
       .then(() => {
         emailInput.value = "";
         passwordInput.value = "";
       })
-      .catch((error) => alert("Login Failed: " + error.message));
+      .catch((error) => {
+        loginError.textContent = "Login Failed: " + error.message;
+      });
   };
 
-  logoutBtn.onclick = () => {
+  // Logout button handler
+  document.getElementById("logout-btn").onclick = () => {
     signOut(auth);
   };
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      loginSection.style.display = "none";
-      adminSection.style.display = "block";
-      fetchAllUsers(); // 🔥 fetch all user data
-    } else {
-      loginSection.style.display = "block";
-      adminSection.style.display = "none";
-    }
-  });
-
+  // Update status button handler
   document.getElementById("update-btn").onclick = () => {
-    const userId = document.getElementById("user-id").value;
-    const status = document.getElementById("status").value;
+    const userId = document.getElementById("user-id").value.trim();
+    const status = document.getElementById("status").value.trim();
+    if (!userId || !status) {
+      alert("Please fill in both User ID and Status.");
+      return;
+    }
     set(ref(db, "users/" + userId + "/status"), status)
       .then(() => alert("Status updated!"))
       .catch((error) => alert("Error updating: " + error.message));
   };
 
+  // Monitor auth state
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginSection.style.display = "none";
+      adminSection.style.display = "block";
+      fetchAllUsers();
+    } else {
+      loginSection.style.display = "block";
+      adminSection.style.display = "none";
+      userData.textContent = "";
+      loginError.textContent = "";
+    }
+  });
+
+  // Fetch all user data from database
   function fetchAllUsers() {
     const usersRef = ref(db, "users/");
     onValue(usersRef, (snapshot) => {
@@ -117,13 +129,11 @@
           userData.innerHTML += `<h4>${userId}</h4><pre>${userInfo}</pre><hr>`;
         });
       } else {
-        userData.innerHTML = "No users found.";
+        userData.textContent = "No users found.";
       }
     });
   }
 </script>
-
-
 
 </body>
 </html>
